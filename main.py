@@ -84,7 +84,7 @@ def userInput(res, API_key, engine_id, query, precision_boundary):
 
         # Store and classify the results' title and snippet based on user input
         if rele=='Y':
-            print(title+snippet)
+            # print(title+snippet)
             rele_docs.append(title+snippet)
         else:
             nonrele_docs.append(title+snippet)

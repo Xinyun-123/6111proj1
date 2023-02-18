@@ -177,6 +177,7 @@ def augmentWord(new_query_vector, wordDict, query, bigramDict):
     # Sort vec_word from high to low
     sort_vec_word = sorted(vec_word, reverse=True, key=lambda x: x[0])
     query = query.lower().split(" ")
+    original_query = query
     
     # Find the top 2 new words to be added into the query 
     count = 0
@@ -192,7 +193,7 @@ def augmentWord(new_query_vector, wordDict, query, bigramDict):
     
     new_query = compute_ordering(query + new_words, bigramDict)
     
-    return new_query
+    return original_query,new_words,new_query
 
 
 
@@ -274,13 +275,23 @@ def main():
         # Expand the query using Rocchio algorithm
         new_query_vector = rocchio(collection_vector, relevant_count, non_relevant_count)
         # query = query + " " + " ".join(augmentWord(new_query_vector,wordDict, query))
-        new_query = augmentWord(new_query_vector, wordDict, query, bigramDict)
+        original_query,new_words,new_query = augmentWord(new_query_vector, wordDict, query, bigramDict)
 
+        print("======================")
+        print("FEEDBACK SUMMARY")
+        print('Query ', " ".join(original_query))
+        print('Precision ', precision)
+        print("Still below the desired precision of ", precision_boundary)
+        print("Indexing results ....\nIndexing results ....")
+        print("Augmenting by ", " ".join(new_words))
         query = " ".join(new_query)
-        print('The New Query is: ', query)
-        
-        
 
+    ## when precision is above threshold
+    print("======================")
+    print("FEEDBACK SUMMARY")
+    print("Query ", query)
+    print("Precision ", precision)
+    print("Desired precision reached, done")
 
 
 if __name__ == "__main__":

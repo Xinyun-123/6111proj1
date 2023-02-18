@@ -31,7 +31,18 @@ import numpy as np
 
 import sys
 
-    
+import nltk
+nltk.download('wordnet')
+nltk.download('punkt')
+nltk.download('omw-1.4')
+from nltk.corpus import stopwords
+from nltk.tokenize import word_tokenize
+
+from collections import defaultdict
+
+from itertools import permutations
+
+
 # Ask the user to mark the results as relevant or non-relevant
 # Parameter:
 #   res: dictionary of top10 query results
@@ -74,6 +85,7 @@ def userInput(res, API_key, engine_id, query, precision_boundary):
 
         # Store and classify the results' title and snippet based on user input
         if rele=='Y':
+            print(title+snippet)
             rele_docs.append(title+snippet)
         else:
             nonrele_docs.append(title+snippet)
@@ -158,7 +170,7 @@ def rocchio(collection_vector, rel_count, nrel_count):
 #   query: string of original query
 # Return: 
 #   new_words: words to be augumented into the query
-def augmentWord(new_query_vector, wordDict, query):
+def augmentWord(new_query_vector, wordDict, query, bigramDict):
     
     # Combine the tf-idf vector with the corresponding word
     vec_word = zip(new_query_vector, wordDict)
@@ -178,9 +190,43 @@ def augmentWord(new_query_vector, wordDict, query):
             new_words.append(sort_vec_word[i][1])
             i+=1
             count+=1
-    return new_words
+    
+    new_query = compute_ordering(query + new_words, bigramDict)
+    
+    return new_query
 
 
+
+
+def compute_ordering(query, bigramDict):
+    perms = permutations(query)
+    
+    best_ordering = ''
+    max_freq = float('-inf')
+    
+    for i in perms:
+        i_bigram = list(nltk.bigrams(i))
+        freq = 0
+
+        for bigram in i_bigram:
+            freq += bigramDict[bigram]
+
+        if freq > max_freq:
+            max_freq = freq
+            best_ordering = i
+    return best_ordering
+            
+     
+
+# Compute the bigram from the corpus and update the bigram count dictionary
+def compute_bigram(bigramDict, corpus):
+    for sentence in corpus:
+        words = word_tokenize(sentence.lower())
+        for bigram in list(nltk.bigrams(words)):
+            bigramDict[bigram] += 1
+    return bigramDict
+        
+    
 
 # We use Rocchio Algroithm to implement Query Expansion
 def main():
@@ -196,6 +242,9 @@ def main():
     
     # Define stop words
     stop_words = stop_word('proj1-stop.txt')
+    
+    # Initialize bigram count dictionary
+    bigramDict = defaultdict(int)
     
     # Query expansion
     while precision < precision_boundary: 
@@ -220,13 +269,20 @@ def main():
         collection = [query] + relevant + non_relevant
         collection_vector, wordDict = tfidfTransform(collection, stop_words)
         
+        # Calculate the bigram from collection
+        bigramDict = compute_bigram(bigramDict, collection)
+        
         # Expand the query using Rocchio algorithm
         new_query_vector = rocchio(collection_vector, relevant_count, non_relevant_count)
-        query = query + " " + " ".join(augmentWord(new_query_vector,wordDict, query))
+        # query = query + " " + " ".join(augmentWord(new_query_vector,wordDict, query))
+        new_query = augmentWord(new_query_vector, wordDict, query, bigramDict)
+
+        query = " ".join(new_query)
         print('The New Query is: ', query)
-
-
         
+        
+
+
 
 if __name__ == "__main__":
     main()

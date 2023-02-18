@@ -56,8 +56,7 @@ def userInput(res, API_key, engine_id, query, precision_boundary):
     
     # Retrieve top 10 results
     top10 = res['items'][:10]
-    print("Parameters: \n \
-    Client key  = ", API_key,
+    print("Parameters: \nClient key  = ", API_key,
     "\nEngine key  = ", engine_id,
     "\nQuery       = ", query,
     "\nPrecision   = ", precision_boundary,
@@ -258,11 +257,11 @@ def main():
         # Calculate precision of this iteration
         relevant_count = len(relevant)
         non_relevant_count = len(non_relevant)
-        new_precision = relevant_count/(relevant_count + non_relevant_count)
+        precision = relevant_count/(relevant_count + non_relevant_count)
         
         # Break the query expansion process if the precision is above or equal 
         # to the Threshold or if the precision is zero
-        if new_precision == 0 or precision >= precision_boundary:
+        if precision == 0 or precision >= precision_boundary:
             break
 
         # Transform query, relevant, and non-relevant results into tf-idf vectors
